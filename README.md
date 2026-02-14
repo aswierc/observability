@@ -40,16 +40,9 @@ We want to validate, explore and demonstrate:
 ## 🧡 Architecture
 
 ```
-                ┌────────────────────┐       ┌──────────────┐
-Client → HTTP → │ laravel-api        │ ──HTTP→ │ fastapi     │
-                │ (trace init)       │        └──────────────┘
-                │                    │
-                │ ──HTTP→ symfony-api│ ──RabbitMQ→ async -> consumer
-                └────────────────────┘
-                    │               │
-                    │               │
-                    │               ↓
-                 PostgreSQL         RabbitMQ
+Client → HTTP → symfony-api ──HTTP→ laravel-api ──HTTP→ fastapi
+                 │
+                 └─ /flow ─HTTP→ laravel-api (/publish) ─RabbitMQ→ symfony-consumer ─HTTP→ fastapi
 
 Logs + Metrics + Traces
                 ↓
@@ -60,57 +53,37 @@ Logs + Metrics + Traces
 
 ---
 
-## 📦 Repo Structure (suggested)
-
-```
-observability/
-├── apps/
-│   ├── laravel-api/
-│   ├── symfony-api/
-│   └── fastapi/
-├── infra/
-│   ├── docker/
-│   │   └── compose/
-│   └── k8s/
-├── otel/
-│   └── collector/
-│       └── config.yaml
-├── docs/
-│   ├── scenarios.md
-│   └── dashboards.md
-├── scripts/
-│   ├── kind-create.sh
-│   ├── kind-destroy.sh
-│   └── seed.sh
-├── Makefile
-└── README.md
-```
-
----
-
 ## 🧹 Quick Start
 
-### Local with Docker Compose
+### Local with Kubernetes (kind) — recommended (safe)
 
 ```bash
-git clone https://github.com/aswierc/observability.git
-cd observability
-docker compose -f infra/docker/compose/docker-compose.yml up -d
+make kind-create
+make up
+make smoke
+make grafana
 ```
 
-Grafana will be available at `http://localhost:3000`.
+Grafana: `http://localhost:3000` (admin/admin)
+`make smoke` prints a `flow traceID=...` you can paste into Grafana → Explore → Tempo.
 
----
+Safety notes:
+- All scripts use **repo-local** `KUBECONFIG` under `./.local/` and refuse to run otherwise.
+- `helm` also uses **repo-local** `HELM_*_HOME` under `./.local/helm/*`.
 
-### Local with Kubernetes (kind)
+### k9s
+
+Safest:
 
 ```bash
-./scripts/kind-create.sh
-kubectl apply -k infra/k8s/overlays/local
-kubectl -n observability port-forward svc/grafana 3000:3000
+KUBECONFIG=./.local/kube/kind-observability.kubeconfig k9s
 ```
 
-Open `http://localhost:3000` in your browser.
+Or merge the kind context into your `~/.kube/config` (creates a timestamped backup):
+
+```bash
+make kubeconfig-merge
+```
 
 ---
 
@@ -133,7 +106,7 @@ Collector config includes receivers, processors and exporters.
 ### 1. HTTP chain trace
 
 ```
-GET /api/chain → laravel → fastapi → symfony
+GET /chain → symfony-api → laravel-api → fastapi
 ```
 
 Expected: One distributed trace with correct spans and context propagation across languages.
@@ -141,7 +114,7 @@ Expected: One distributed trace with correct spans and context propagation acros
 ### 2. Database trace
 
 ```
-GET /api/db → laravel
+GET /db → laravel-api
            → PostgreSQL query
 ```
 
@@ -150,8 +123,8 @@ Expected: DB span with semantic attributes and timeline.
 ### 3. Async trace via RabbitMQ
 
 ```
-Publish in laravel
-Consume in symfony
+GET /flow → symfony-api
+        → laravel-api (/publish) → RabbitMQ → symfony-consumer → fastapi
 ```
 
 Expected: Trace continues across message broker boundaries.
@@ -185,7 +158,7 @@ MIT
 ## 🔨 Roadmap
 
 ☑️ Local Dev Environment
-☐ Message queue trace propagation
-☐ Prometheus dashboards
-☐ Load test and SLO alerts
+☑️ Message queue trace propagation
+☑️ Prometheus dashboards (basic P95)
+☐ Load test + SLO alerts
 ☐ CI integration with tracing validation

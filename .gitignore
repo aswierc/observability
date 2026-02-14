@@ -6,6 +6,13 @@
 # Apps: keep repo clean (deps/build artifacts)
 apps/**/vendor/
 apps/**/node_modules/
-apps/**/var/
-apps/**/storage/
-apps/**/bootstrap/cache/
+
+# Laravel: keep dirs, ignore generated cache files
+apps/**/bootstrap/cache/*.php
+!apps/**/bootstrap/cache/.gitignore
+
+# Python
+**/__pycache__/
+**/*.py[cod]
+**/.pytest_cache/
+**/.venv/
