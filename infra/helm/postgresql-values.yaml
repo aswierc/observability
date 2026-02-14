@@ -1,0 +1,10 @@
+fullnameOverride: postgresql
+
+auth:
+  username: app
+  password: app
+  database: app
+
+primary:
+  persistence:
+    enabled: false

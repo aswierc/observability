@@ -1,0 +1,7 @@
+fullnameOverride: tempo
+
+tempo:
+  retention: 24h
+
+persistence:
+  enabled: false

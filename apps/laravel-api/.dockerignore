@@ -1,0 +1,11 @@
+.env
+.env.*
+node_modules
+vendor
+storage
+bootstrap/cache
+.git
+.github
+.idea
+.vscode
+tests

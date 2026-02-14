@@ -1,0 +1,44 @@
+fullnameOverride: loki
+
+deploymentMode: SingleBinary
+
+read:
+  replicas: 0
+
+write:
+  replicas: 0
+
+backend:
+  replicas: 0
+
+loki:
+  useTestSchema: true
+  auth_enabled: false
+  rulerConfig:
+    wal:
+      dir: /tmp/loki/ruler-wal
+  commonConfig:
+    path_prefix: /tmp/loki
+    replication_factor: 1
+  storage:
+    type: filesystem
+    filesystem:
+      chunks_directory: /tmp/loki/chunks
+      rules_directory: /tmp/loki/rules
+  storage_config:
+    bloom_shipper:
+      working_directory: /tmp/loki/data/bloomshipper
+
+chunksCache:
+  enabled: false
+
+resultsCache:
+  enabled: false
+
+gateway:
+  enabled: false
+
+singleBinary:
+  replicas: 1
+  persistence:
+    enabled: false

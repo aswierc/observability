@@ -1,0 +1,57 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: symfony-consumer
+  labels:
+    app.kubernetes.io/name: symfony-consumer
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: symfony-consumer
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: symfony-consumer
+    spec:
+      containers:
+        - name: symfony-consumer
+          image: observability-symfony-api:dev
+          imagePullPolicy: IfNotPresent
+          command: ["php", "bin/console", "app:rabbit:consume"]
+          env:
+            - name: APP_ENV
+              value: prod
+            - name: APP_DEBUG
+              value: "0"
+            - name: APP_SECRET
+              value: local-dev-secret
+
+            - name: RABBITMQ_HOST
+              value: rabbitmq
+            - name: RABBITMQ_PORT
+              value: "5672"
+            - name: RABBITMQ_USER
+              value: app
+            - name: RABBITMQ_PASS
+              value: app
+            - name: RABBITMQ_QUEUE
+              value: observability
+
+            - name: DOWNSTREAM_URL
+              value: http://fastapi/sleep
+
+            - name: OTEL_SERVICE_NAME
+              value: symfony-consumer
+            - name: OTEL_TRACES_EXPORTER
+              value: otlp
+            - name: OTEL_METRICS_EXPORTER
+              value: otlp
+            - name: OTEL_LOGS_EXPORTER
+              value: otlp
+            - name: OTEL_EXPORTER_OTLP_ENDPOINT
+              value: http://otel-collector:4318
+            - name: OTEL_EXPORTER_OTLP_PROTOCOL
+              value: http/protobuf
+            - name: OTEL_RESOURCE_ATTRIBUTES
+              value: service.version=0.1.0,deployment.environment=local
