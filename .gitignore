@@ -1,2 +1,11 @@
-.idea
 .codex
+.idea/
+.local/
+.DS_Store
+
+# Apps: keep repo clean (deps/build artifacts)
+apps/**/vendor/
+apps/**/node_modules/
+apps/**/var/
+apps/**/storage/
+apps/**/bootstrap/cache/
