@@ -23,6 +23,10 @@ This project contains multiple services and infrastructure needed to explore ful
 
 This stack lets you visualize traces, metrics, and logs in one place and explore trace context propagation, HTTP spans, DB spans, and logs correlation.
 
+<img src="docs/1.png" />
+
+<img src="docs/2.png" />
+
 ---
 
 ## 🎯 Objectives
